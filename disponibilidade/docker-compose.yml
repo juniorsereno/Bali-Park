@@ -1,0 +1,37 @@
+# Define a versão do Docker Compose.
+version: '3.8'
+
+# Define os serviços (contêineres) que compõem sua aplicação.
+services:
+  # Nome do serviço.
+  bali-park-scraper:
+    # Instrui o Docker Compose a construir uma imagem usando o Dockerfile
+    # no diretório atual (onde este arquivo docker-compose.yml está).
+    build: .
+    # Define o nome do contêiner para fácil identificação.
+    container_name: bali-park-scraper
+    # 'unless-stopped' garante que o contêiner reinicie com o Docker
+    # ou o sistema, mas não se for parado manualmente. Ideal para um
+    # serviço de longa duração como e
+    restart: unless-stopped
+
+# Instruções de Uso com EasyPanel:
+#
+# O script agora gerencia seu próprio agendamento (a cada 6 horas).
+# Você NÃO precisa mais de um Cron Job.
+#
+# 1. Coloque esta pasta na sua VPS.
+# 2. Execute o seguinte comando no diretório do projeto APENAS UMA VEZ
+#    para iniciar o serviço em segundo plano:
+#
+#    docker-compose up --build -d
+#
+#    - O comando 'up' inicia o serviço.
+#    - A flag '--build' reconstrói a imagem se houver mudanças.
+#    - A flag '-d' (detached) executa em segundo plano.
+#
+# Para verificar os logs do serviço em tempo real:
+# docker-compose logs -f
+#
+# Para parar o serviço:
+# docker-compose down 

@@ -1,0 +1,16 @@
+{
+  "name": "balipark-disponibilidade",
+  "version": "1.0.0",
+  "description": "Automação para capturar disponibilidades e valores do calendário do Bali Park",
+  "main": "disponibilidade-automation.js",
+  "scripts": {
+    "start": "node disponibilidade-automation.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["balipark", "disponibilidade", "calendario", "automacao", "playwright"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "playwright": "^1.53.2"
+  }
+} 
