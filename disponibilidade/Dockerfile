@@ -1,6 +1,6 @@
 # Use a imagem oficial do Playwright que já inclui Node.js e todas as dependências de navegadores.
 # Isso evita problemas de instalação de browsers dentro do contêiner.
-FROM mcr.microsoft.com/playwright:v1.44.0-jammy
+FROM mcr.microsoft.com/playwright:v1.53.2-jammy
 
 # Define o diretório de trabalho dentro do contêiner.
 WORKDIR /usr/src/app
