@@ -5,13 +5,22 @@
   "main": "disponibilidade-automation.js",
   "scripts": {
     "start": "node disponibilidade-automation.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
-  "keywords": ["balipark", "disponibilidade", "calendario", "automacao", "playwright"],
+  "keywords": [
+    "balipark",
+    "disponibilidade",
+    "calendario",
+    "automacao",
+    "playwright"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "axios": "^1.7.2",
     "playwright": "^1.53.2"
+  },
+  "devDependencies": {
+    "jest": "^30.0.4"
   }
-} 
+}
