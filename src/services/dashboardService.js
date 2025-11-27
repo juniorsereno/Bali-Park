@@ -1,0 +1,173 @@
+const db = require('../database');
+
+const dashboardService = {
+  async getKPIs() {
+    // KPIs Gerais (Mês Atual)
+    const query = `
+      WITH current_month_sales AS (
+        SELECT
+          COUNT(*) as total_vendas,
+          SUM(CAST(REPLACE(REPLACE(REPLACE(valor_total, 'R$', ''), '.', ''), ',', '.') AS NUMERIC)) as faturamento
+        FROM bali_park.vendas
+        WHERE TO_DATE(
+          REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(data_compra,
+            'Fev', 'Feb'), 'Abr', 'Apr'), 'Mai', 'May'), 'Ago', 'Aug'), 'Set', 'Sep'), 'Out', 'Oct'), 'Dez', 'Dec'), '.', '')
+        , 'DD Mon YYYY') >= DATE_TRUNC('month', CURRENT_DATE)
+      ),
+      current_month_users AS (
+        SELECT
+          COUNT(*) as total_clientes,
+          COUNT(CASE WHEN message_count > 1 THEN 1 END) as clientes_interagiram,
+          COUNT(CASE WHEN source = 'central_vendas' THEN 1 END) as leads_central_vendas,
+          COUNT(CASE WHEN source = 'central' THEN 1 END) as leads_remarketing
+        FROM bali_park.users
+        WHERE criado_as >= DATE_TRUNC('month', CURRENT_DATE)
+      )
+      SELECT
+        COALESCE(s.faturamento, 0) as faturamento,
+        COALESCE(s.total_vendas, 0) as vendas,
+        COALESCE(u.total_clientes, 0) as atendimentoTotal,
+        COALESCE(u.clientes_interagiram, 0) as atendimentoResp,
+        COALESCE(u.leads_central_vendas, 0) as leadsCentralVendas,
+        COALESCE(u.leads_remarketing, 0) as leadsRemarketing
+      FROM current_month_sales s, current_month_users u;
+    `;
+    
+    const result = await db.query(query);
+    const data = result.rows[0];
+    
+    // Cálculos derivados
+    const ticket = data.vendas > 0 ? data.faturamento / data.vendas : 0;
+    const taxaResposta = data.atendimentototal > 0 ? (data.atendimentoresp / data.atendimentototal) * 100 : 0;
+    
+    // Novas Taxas
+    const convGeral = data.atendimentototal > 0 ? (data.vendas / data.atendimentototal) * 100 : 0;
+    const convReal = data.atendimentoresp > 0 ? (data.vendas / data.atendimentoresp) * 100 : 0;
+
+    return {
+      faturamento: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(data.faturamento),
+      vendas: data.vendas,
+      ticket: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(ticket),
+      taxaResposta: taxaResposta.toFixed(1) + '%',
+      atendimentoResp: data.atendimentoresp,
+      atendimentoTotal: data.atendimentototal,
+      leadsCentralVendas: data.leadscentralvendas,
+      leadsRemarketing: data.leadsremarketing,
+      convGeral: convGeral.toFixed(2) + '%',
+      convReal: convReal.toFixed(2) + '%'
+    };
+  },
+
+  async getDailyEvolution() {
+    // Evolução Diária (Últimos 30 dias)
+    const query = `
+      WITH date_series AS (
+        SELECT generate_series(CURRENT_DATE - INTERVAL '30 days', CURRENT_DATE, '1 day')::date AS date
+      ),
+      daily_sales AS (
+        SELECT
+          TO_DATE(
+            REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(data_compra,
+              'Fev', 'Feb'), 'Abr', 'Apr'), 'Mai', 'May'), 'Ago', 'Aug'), 'Set', 'Sep'), 'Out', 'Oct'), 'Dez', 'Dec'), '.', '')
+          , 'DD Mon YYYY') as date,
+          COUNT(*) as total_vendas
+        FROM bali_park.vendas
+        WHERE TO_DATE(
+          REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(data_compra,
+            'Fev', 'Feb'), 'Abr', 'Apr'), 'Mai', 'May'), 'Ago', 'Aug'), 'Set', 'Sep'), 'Out', 'Oct'), 'Dez', 'Dec'), '.', '')
+        , 'DD Mon YYYY') >= CURRENT_DATE - INTERVAL '30 days'
+        GROUP BY 1
+      ),
+      daily_users AS (
+        SELECT
+          DATE(criado_as) as date,
+          COUNT(*) as total_users,
+          COUNT(CASE WHEN message_count > 2 THEN 1 END) as active_users
+        FROM bali_park.users
+        WHERE criado_as >= CURRENT_DATE - INTERVAL '30 days'
+        GROUP BY 1
+      )
+      SELECT
+        TO_CHAR(ds.date, 'DD/MM') as label,
+        COALESCE(u.total_users, 0) as users,
+        COALESCE(u.active_users, 0) as active_users,
+        COALESCE(s.total_vendas, 0) as sales
+      FROM date_series ds
+      LEFT JOIN daily_sales s ON ds.date = s.date
+      LEFT JOIN daily_users u ON ds.date = u.date
+      ORDER BY ds.date;
+    `;
+
+    const result = await db.query(query);
+    return {
+      labels: JSON.stringify(result.rows.map(r => r.label)),
+      users: JSON.stringify(result.rows.map(r => r.users)),
+      activeUsers: JSON.stringify(result.rows.map(r => r.active_users)),
+      sales: JSON.stringify(result.rows.map(r => r.sales))
+    };
+  },
+
+  async getMonthlyPerformance() {
+    // Performance Mensal (Últimos 6 meses)
+    // Agrupar por mês (pois o group by data_ordem pode separar dias diferentes)
+    const improvedQuery = `
+      SELECT
+        TO_CHAR(DATE_TRUNC('month', TO_DATE(
+          REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(data_compra,
+            'Fev', 'Feb'), 'Abr', 'Apr'), 'Mai', 'May'), 'Ago', 'Aug'), 'Set', 'Sep'), 'Out', 'Oct'), 'Dez', 'Dec'), '.', '')
+        , 'DD Mon YYYY')), 'Mon/YY') as mes,
+        DATE_TRUNC('month', TO_DATE(
+          REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(data_compra,
+            'Fev', 'Feb'), 'Abr', 'Apr'), 'Mai', 'May'), 'Ago', 'Aug'), 'Set', 'Sep'), 'Out', 'Oct'), 'Dez', 'Dec'), '.', '')
+        , 'DD Mon YYYY')) as data_ordem,
+        COUNT(*) as qtd,
+        SUM(CAST(REPLACE(REPLACE(REPLACE(valor_total, 'R$', ''), '.', ''), ',', '.') AS NUMERIC)) as total
+      FROM bali_park.vendas
+      GROUP BY 1, 2
+      ORDER BY 2 DESC
+      LIMIT 6;
+    `;
+    
+    const improvedResult = await db.query(improvedQuery);
+
+    return improvedResult.rows.map(row => `
+      <tr>
+        <td>${row.mes}</td>
+        <td><span class="badge">${row.qtd}</span></td>
+        <td>${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(row.total)}</td>
+      </tr>
+    `).join('');
+  },
+
+  async getLastSales() {
+    // Últimas 10 Vendas
+    const query = `
+      SELECT
+        data_compra,
+        voucher,
+        id,
+        valor_total
+      FROM bali_park.vendas
+      ORDER BY TO_DATE(
+        REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(data_compra,
+          'Fev', 'Feb'), 'Abr', 'Apr'), 'Mai', 'May'), 'Ago', 'Aug'), 'Set', 'Sep'), 'Out', 'Oct'), 'Dez', 'Dec'), '.', '')
+      , 'DD Mon YYYY') DESC
+      LIMIT 10;
+    `;
+
+    const result = await db.query(query);
+
+    return result.rows.map(row => `
+      <tr>
+        <td>${row.data_compra}</td>
+        <td>
+          <div style="font-weight:500;">${row.voucher}</div>
+          <div style="font-size:0.75rem; color:#6b7280;">ID: ${row.id}</div>
+        </td>
+        <td style="font-weight:600; color:#111827;">${row.valor_total}</td>
+      </tr>
+    `).join('');
+  }
+};
+
+module.exports = dashboardService;
