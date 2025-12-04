@@ -1,10 +1,10 @@
 const db = require('../database');
 
 const dashboardService = {
-  async getKPIs() {
-    // KPIs Gerais (Mês Atual)
+  async getKPIs(dataInicial, dataFinal) {
+    // KPIs Gerais (Período Selecionado)
     const query = `
-      WITH current_month_sales AS (
+      WITH period_sales AS (
         SELECT
           COUNT(*) as total_vendas,
           SUM(CAST(REPLACE(REPLACE(REPLACE(valor_total, 'R$', ''), '.', ''), ',', '.') AS NUMERIC)) as faturamento
@@ -12,16 +12,16 @@ const dashboardService = {
         WHERE TO_DATE(
           REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(data_compra,
             'Fev', 'Feb'), 'Abr', 'Apr'), 'Mai', 'May'), 'Ago', 'Aug'), 'Set', 'Sep'), 'Out', 'Oct'), 'Dez', 'Dec'), '.', '')
-        , 'DD Mon YYYY') >= DATE_TRUNC('month', CURRENT_DATE)
+        , 'DD Mon YYYY') BETWEEN $1::date AND $2::date
       ),
-      current_month_users AS (
+      period_users AS (
         SELECT
           COUNT(*) as total_clientes,
           COUNT(CASE WHEN message_count > 1 THEN 1 END) as clientes_interagiram,
           COUNT(CASE WHEN source = 'central_vendas' THEN 1 END) as leads_central_vendas,
           COUNT(CASE WHEN source = 'central' THEN 1 END) as leads_remarketing
         FROM bali_park.users
-        WHERE criado_as >= DATE_TRUNC('month', CURRENT_DATE)
+        WHERE DATE(criado_as) BETWEEN $1::date AND $2::date
       )
       SELECT
         COALESCE(s.faturamento, 0) as faturamento,
@@ -30,10 +30,10 @@ const dashboardService = {
         COALESCE(u.clientes_interagiram, 0) as atendimentoResp,
         COALESCE(u.leads_central_vendas, 0) as leadsCentralVendas,
         COALESCE(u.leads_remarketing, 0) as leadsRemarketing
-      FROM current_month_sales s, current_month_users u;
+      FROM period_sales s, period_users u;
     `;
     
-    const result = await db.query(query);
+    const result = await db.query(query, [dataInicial, dataFinal]);
     const data = result.rows[0];
     
     // Cálculos derivados
@@ -58,11 +58,11 @@ const dashboardService = {
     };
   },
 
-  async getDailyEvolution() {
-    // Evolução Diária (Últimos 30 dias)
+  async getDailyEvolution(dataInicial, dataFinal) {
+    // Evolução Diária (Período Selecionado)
     const query = `
       WITH date_series AS (
-        SELECT generate_series(CURRENT_DATE - INTERVAL '30 days', CURRENT_DATE, '1 day')::date AS date
+        SELECT generate_series($1::date, $2::date, '1 day')::date AS date
       ),
       daily_sales AS (
         SELECT
@@ -75,7 +75,7 @@ const dashboardService = {
         WHERE TO_DATE(
           REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(data_compra,
             'Fev', 'Feb'), 'Abr', 'Apr'), 'Mai', 'May'), 'Ago', 'Aug'), 'Set', 'Sep'), 'Out', 'Oct'), 'Dez', 'Dec'), '.', '')
-        , 'DD Mon YYYY') >= CURRENT_DATE - INTERVAL '30 days'
+        , 'DD Mon YYYY') BETWEEN $1::date AND $2::date
         GROUP BY 1
       ),
       daily_users AS (
@@ -84,7 +84,7 @@ const dashboardService = {
           COUNT(*) as total_users,
           COUNT(CASE WHEN message_count > 2 THEN 1 END) as active_users
         FROM bali_park.users
-        WHERE criado_as >= CURRENT_DATE - INTERVAL '30 days'
+        WHERE DATE(criado_as) BETWEEN $1::date AND $2::date
         GROUP BY 1
       )
       SELECT
@@ -98,7 +98,7 @@ const dashboardService = {
       ORDER BY ds.date;
     `;
 
-    const result = await db.query(query);
+    const result = await db.query(query, [dataInicial, dataFinal]);
     return {
       labels: JSON.stringify(result.rows.map(r => r.label)),
       users: JSON.stringify(result.rows.map(r => r.users)),

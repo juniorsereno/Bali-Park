@@ -155,7 +155,28 @@
     <div class="dashboard-container">
         <header>
             <h1>Dashboard de Performance</h1>
-            <p class="subtitle">Vendas e Efetividade (MÊS ATUAL))</p>
+            <p class="subtitle">Vendas e Efetividade de Atendimento</p>
+            
+            <div style="margin-top: 20px; display: flex; gap: 15px; justify-content: center; align-items: center; flex-wrap: wrap;">
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <label for="dataInicial" style="font-size: 0.9rem; color: var(--text-secondary);">Data Inicial:</label>
+                    <input type="date" id="dataInicial" value="<%= dataInicial %>" 
+                           style="padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem;">
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <label for="dataFinal" style="font-size: 0.9rem; color: var(--text-secondary);">Data Final:</label>
+                    <input type="date" id="dataFinal" value="<%= dataFinal %>" 
+                           style="padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem;">
+                </div>
+                <button onclick="aplicarFiltro()" 
+                        style="padding: 8px 20px; background-color: var(--accent-color); color: white; border: none; border-radius: 6px; font-size: 0.9rem; cursor: pointer; font-weight: 500;">
+                    Aplicar Filtro
+                </button>
+                <button onclick="limparFiltro()" 
+                        style="padding: 8px 20px; background-color: #6b7280; color: white; border: none; border-radius: 6px; font-size: 0.9rem; cursor: pointer; font-weight: 500;">
+                    Mês Atual
+                </button>
+            </div>
         </header>
 
         <!-- Top Row Cards -->
@@ -341,6 +362,28 @@
                 }
             }
         });
+
+        // Funções de filtro de data
+        function aplicarFiltro() {
+            const dataInicial = document.getElementById('dataInicial').value;
+            const dataFinal = document.getElementById('dataFinal').value;
+            
+            if (!dataInicial || !dataFinal) {
+                alert('Por favor, selecione ambas as datas');
+                return;
+            }
+            
+            if (dataInicial > dataFinal) {
+                alert('A data inicial não pode ser maior que a data final');
+                return;
+            }
+            
+            window.location.href = `/?dataInicial=${dataInicial}&dataFinal=${dataFinal}`;
+        }
+
+        function limparFiltro() {
+            window.location.href = '/';
+        }
     </script>
 </body>
 </html>
