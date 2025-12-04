@@ -256,6 +256,10 @@
         const activeUsersData = <%- charts.activeUsers %>;
         const salesData = <%- charts.sales %>;
 
+        // Calcular o valor máximo dos dados
+        const maxValue = Math.max(...usersData, ...activeUsersData, ...salesData);
+        const yAxisMax = Math.max(100, Math.ceil(maxValue * 1.02)); // Pelo menos 100, ou 20% acima do máximo
+
         new Chart(ctx, {
             type: 'line',
             data: {
@@ -303,6 +307,17 @@
                         callbacks: {
                             label: function(context) {
                                 return context.dataset.label + ': ' + context.parsed.y;
+                            },
+                            afterBody: function(context) {
+                                const index = context[0].dataIndex;
+                                const totalUsers = usersData[index];
+                                const sales = salesData[index];
+                                
+                                if (totalUsers > 0) {
+                                    const conversionRate = ((sales / totalUsers) * 100).toFixed(2);
+                                    return '\nTaxa de Conversão: ' + conversionRate + '%';
+                                }
+                                return '\nTaxa de Conversão: 0.00%';
                             }
                         }
                     }
@@ -313,6 +328,10 @@
                         display: true,
                         position: 'left',
                         beginAtZero: true,
+                        max: yAxisMax,
+                        ticks: {
+                            stepSize: 10
+                        },
                         grid: { borderDash: [5, 5], color: '#f3f4f6' },
                         title: { display: true, text: 'Quantidade' }
                     },
