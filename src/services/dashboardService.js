@@ -2,17 +2,15 @@ const db = require('../database');
 
 const dashboardService = {
   async getKPIs(dataInicial, dataFinal) {
-    // KPIs Gerais (Período Selecionado)
+    // KPIs Gerais (Período Selecionado) - Apenas vendas pagas (paid = true)
     const query = `
       WITH period_sales AS (
         SELECT
           COUNT(*) as total_vendas,
-          SUM(CAST(REPLACE(REPLACE(REPLACE(valor_total, 'R$', ''), '.', ''), ',', '.') AS NUMERIC)) as faturamento
+          SUM(valor_total) as faturamento
         FROM bali_park.vendas
-        WHERE TO_DATE(
-          REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(data_compra,
-            'Fev', 'Feb'), 'Abr', 'Apr'), 'Mai', 'May'), 'Ago', 'Aug'), 'Set', 'Sep'), 'Out', 'Oct'), 'Dez', 'Dec'), '.', '')
-        , 'DD Mon YYYY') BETWEEN $1::date AND $2::date
+        WHERE paid = true
+          AND DATE(created_at) BETWEEN $1::date AND $2::date
       ),
       period_users AS (
         SELECT
@@ -59,23 +57,18 @@ const dashboardService = {
   },
 
   async getDailyEvolution(dataInicial, dataFinal) {
-    // Evolução Diária (Período Selecionado)
+    // Evolução Diária (Período Selecionado) - Apenas vendas pagas
     const query = `
       WITH date_series AS (
         SELECT generate_series($1::date, $2::date, '1 day')::date AS date
       ),
       daily_sales AS (
         SELECT
-          TO_DATE(
-            REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(data_compra,
-              'Fev', 'Feb'), 'Abr', 'Apr'), 'Mai', 'May'), 'Ago', 'Aug'), 'Set', 'Sep'), 'Out', 'Oct'), 'Dez', 'Dec'), '.', '')
-          , 'DD Mon YYYY') as date,
+          DATE(created_at) as date,
           COUNT(*) as total_vendas
         FROM bali_park.vendas
-        WHERE TO_DATE(
-          REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(data_compra,
-            'Fev', 'Feb'), 'Abr', 'Apr'), 'Mai', 'May'), 'Ago', 'Aug'), 'Set', 'Sep'), 'Out', 'Oct'), 'Dez', 'Dec'), '.', '')
-        , 'DD Mon YYYY') BETWEEN $1::date AND $2::date
+        WHERE paid = true
+          AND DATE(created_at) BETWEEN $1::date AND $2::date
         GROUP BY 1
       ),
       daily_users AS (
@@ -108,29 +101,23 @@ const dashboardService = {
   },
 
   async getMonthlyPerformance() {
-    // Performance Mensal (Últimos 6 meses)
-    // Agrupar por mês (pois o group by data_ordem pode separar dias diferentes)
-    const improvedQuery = `
+    // Performance Mensal (Últimos 6 meses) - Apenas vendas pagas
+    const query = `
       SELECT
-        TO_CHAR(DATE_TRUNC('month', TO_DATE(
-          REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(data_compra,
-            'Fev', 'Feb'), 'Abr', 'Apr'), 'Mai', 'May'), 'Ago', 'Aug'), 'Set', 'Sep'), 'Out', 'Oct'), 'Dez', 'Dec'), '.', '')
-        , 'DD Mon YYYY')), 'Mon/YY') as mes,
-        DATE_TRUNC('month', TO_DATE(
-          REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(data_compra,
-            'Fev', 'Feb'), 'Abr', 'Apr'), 'Mai', 'May'), 'Ago', 'Aug'), 'Set', 'Sep'), 'Out', 'Oct'), 'Dez', 'Dec'), '.', '')
-        , 'DD Mon YYYY')) as data_ordem,
+        TO_CHAR(DATE_TRUNC('month', created_at), 'Mon/YY') as mes,
+        DATE_TRUNC('month', created_at) as data_ordem,
         COUNT(*) as qtd,
-        SUM(CAST(REPLACE(REPLACE(REPLACE(valor_total, 'R$', ''), '.', ''), ',', '.') AS NUMERIC)) as total
+        SUM(valor_total) as total
       FROM bali_park.vendas
+      WHERE paid = true
       GROUP BY 1, 2
       ORDER BY 2 DESC
       LIMIT 6;
     `;
     
-    const improvedResult = await db.query(improvedQuery);
+    const result = await db.query(query);
 
-    return improvedResult.rows.map(row => `
+    return result.rows.map(row => `
       <tr>
         <td>${row.mes}</td>
         <td><span class="badge">${row.qtd}</span></td>
@@ -140,18 +127,16 @@ const dashboardService = {
   },
 
   async getLastSales() {
-    // Últimas 10 Vendas
+    // Últimas 10 Vendas - Apenas vendas pagas
     const query = `
       SELECT
-        data_compra,
-        voucher,
+        TO_CHAR(created_at, 'DD Mon YYYY') as data_compra,
+        voucher_code,
         id,
         valor_total
       FROM bali_park.vendas
-      ORDER BY TO_DATE(
-        REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(data_compra,
-          'Fev', 'Feb'), 'Abr', 'Apr'), 'Mai', 'May'), 'Ago', 'Aug'), 'Set', 'Sep'), 'Out', 'Oct'), 'Dez', 'Dec'), '.', '')
-      , 'DD Mon YYYY') DESC
+      WHERE paid = true
+      ORDER BY created_at DESC
       LIMIT 10;
     `;
 
@@ -161,10 +146,10 @@ const dashboardService = {
       <tr>
         <td>${row.data_compra}</td>
         <td>
-          <div style="font-weight:500;">${row.voucher}</div>
+          <div style="font-weight:500;">${row.voucher_code || '-'}</div>
           <div style="font-size:0.75rem; color:#6b7280;">ID: ${row.id}</div>
         </td>
-        <td style="font-weight:600; color:#111827;">${row.valor_total}</td>
+        <td style="font-weight:600; color:#111827;">${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(row.valor_total || 0)}</td>
       </tr>
     `).join('');
   }

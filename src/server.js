@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const dashboardService = require('./services/dashboardService');
+const { startPaymentScheduler } = require('./jobs/paymentScheduler');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -51,4 +52,7 @@ app.get('/', async (req, res) => {
 // Iniciar Servidor
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
+  
+  // Iniciar job de verificação de pagamentos
+  startPaymentScheduler();
 });
