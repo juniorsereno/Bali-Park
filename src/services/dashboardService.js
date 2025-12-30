@@ -14,9 +14,9 @@ const dashboardService = {
       ),
       period_users AS (
         SELECT
-          COUNT(*) as total_clientes,
+          COUNT(*) FILTER (WHERE source = 'central_vendas' OR (source = 'transbordo_central_vendas' AND message_count > 1)) as total_clientes,
           COUNT(CASE WHEN message_count > 1 THEN 1 END) as clientes_interagiram,
-          COUNT(CASE WHEN source = 'central_vendas' THEN 1 END) as leads_central_vendas,
+          COUNT(*) FILTER (WHERE source = 'central_vendas' OR (source = 'transbordo_central_vendas' AND message_count > 1)) as leads_central_vendas,
           COUNT(CASE WHEN source = 'central' THEN 1 END) as leads_remarketing
         FROM bali_park.users
         WHERE DATE(criado_as) BETWEEN $1::date AND $2::date
@@ -74,7 +74,7 @@ const dashboardService = {
       daily_users AS (
         SELECT
           DATE(criado_as) as date,
-          COUNT(*) as total_users,
+          COUNT(*) FILTER (WHERE source = 'central_vendas' OR (source = 'transbordo_central_vendas' AND message_count > 1)) as total_users,
           COUNT(CASE WHEN message_count > 2 THEN 1 END) as active_users
         FROM bali_park.users
         WHERE DATE(criado_as) BETWEEN $1::date AND $2::date
