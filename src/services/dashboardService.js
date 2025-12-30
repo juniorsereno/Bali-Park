@@ -65,7 +65,8 @@ const dashboardService = {
       daily_sales AS (
         SELECT
           DATE(created_at) as date,
-          COUNT(*) as total_vendas
+          COUNT(*) as total_vendas,
+          COALESCE(SUM(valor_total), 0) as faturamento
         FROM bali_park.vendas
         WHERE paid = true
           AND DATE(created_at) BETWEEN $1::date AND $2::date
@@ -84,7 +85,8 @@ const dashboardService = {
         TO_CHAR(ds.date, 'DD/MM') as label,
         COALESCE(u.total_users, 0) as users,
         COALESCE(u.active_users, 0) as active_users,
-        COALESCE(s.total_vendas, 0) as sales
+        COALESCE(s.total_vendas, 0) as sales,
+        COALESCE(s.faturamento, 0) as revenue
       FROM date_series ds
       LEFT JOIN daily_sales s ON ds.date = s.date
       LEFT JOIN daily_users u ON ds.date = u.date
@@ -96,7 +98,8 @@ const dashboardService = {
       labels: JSON.stringify(result.rows.map(r => r.label)),
       users: JSON.stringify(result.rows.map(r => r.users)),
       activeUsers: JSON.stringify(result.rows.map(r => r.active_users)),
-      sales: JSON.stringify(result.rows.map(r => r.sales))
+      sales: JSON.stringify(result.rows.map(r => r.sales)),
+      revenue: JSON.stringify(result.rows.map(r => parseFloat(r.revenue)))
     };
   },
 

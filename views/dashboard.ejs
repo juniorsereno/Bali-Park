@@ -276,6 +276,7 @@
         const usersData = <%- charts.users %>;
         const activeUsersData = <%- charts.activeUsers %>;
         const salesData = <%- charts.sales %>;
+        const revenueData = <%- charts.revenue %>;
 
         // Calcular máximos separados para cada eixo
         const maxUsers = Math.max(...usersData, ...activeUsersData);
@@ -340,12 +341,19 @@
                                 const index = context[0].dataIndex;
                                 const totalUsers = usersData[index];
                                 const sales = salesData[index];
+                                const revenue = revenueData[index];
+                                
+                                const valorFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(revenue);
+                                let result = '\nValor: ' + valorFormatado;
                                 
                                 if (totalUsers > 0) {
                                     const conversionRate = ((sales / totalUsers) * 100).toFixed(2);
-                                    return '\nTaxa de Conversão: ' + conversionRate + '%';
+                                    result += '\nTaxa de Conversão: ' + conversionRate + '%';
+                                } else {
+                                    result += '\nTaxa de Conversão: 0.00%';
                                 }
-                                return '\nTaxa de Conversão: 0.00%';
+                                
+                                return result;
                             }
                         }
                     }
