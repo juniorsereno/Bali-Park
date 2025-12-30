@@ -277,41 +277,51 @@
         const activeUsersData = <%- charts.activeUsers %>;
         const salesData = <%- charts.sales %>;
 
-        // Calcular o valor máximo dos dados
-        const maxValue = Math.max(...usersData, ...activeUsersData, ...salesData);
-        const yAxisMax = Math.max(100, Math.ceil(maxValue * 1.02)); // Pelo menos 100, ou 20% acima do máximo
+        // Calcular máximos separados para cada eixo
+        const maxUsers = Math.max(...usersData, ...activeUsersData);
+        const maxSales = Math.max(...salesData);
+        const yUsersMax = Math.max(10, Math.ceil(maxUsers * 1.1));
+        const ySalesMax = Math.max(6, Math.ceil(maxSales * 1.5));
 
         new Chart(ctx, {
-            type: 'line',
+            type: 'bar',
             data: {
                 labels: labels,
                 datasets: [
                     {
-                        label: 'Usuários Totais',
+                        type: 'bar',
+                        label: 'Vendas',
+                        data: salesData,
+                        backgroundColor: 'rgba(79, 70, 229, 0.8)',
+                        borderColor: '#4f46e5',
+                        borderWidth: 1,
+                        borderRadius: 4,
+                        yAxisID: 'ySales',
+                        order: 2
+                    },
+                    {
+                        type: 'line',
+                        label: 'Atendimentos Totais',
                         data: usersData,
-                        borderColor: '#6b7280', // Gray
+                        borderColor: '#6b7280',
                         backgroundColor: 'rgba(107, 114, 128, 0.1)',
                         borderWidth: 2,
                         tension: 0.3,
-                        yAxisID: 'y1'
+                        pointRadius: 3,
+                        yAxisID: 'yUsers',
+                        order: 1
                     },
                     {
-                        label: 'Usuários Que Interagiram',
+                        type: 'line',
+                        label: 'Que Interagiram',
                         data: activeUsersData,
-                        borderColor: '#f59e0b', // Amber
+                        borderColor: '#f59e0b',
                         backgroundColor: 'rgba(245, 158, 11, 0.1)',
                         borderWidth: 2,
                         tension: 0.3,
-                        yAxisID: 'y1'
-                    },
-                    {
-                        label: 'Vendas (Qtd)',
-                        data: salesData,
-                        borderColor: '#4f46e5', // Indigo
-                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.3,
-                        yAxisID: 'y1'
+                        pointRadius: 3,
+                        yAxisID: 'yUsers',
+                        order: 1
                     }
                 ]
             },
@@ -326,9 +336,6 @@
                     legend: { position: 'top' },
                     tooltip: {
                         callbacks: {
-                            label: function(context) {
-                                return context.dataset.label + ': ' + context.parsed.y;
-                            },
                             afterBody: function(context) {
                                 const index = context[0].dataIndex;
                                 const totalUsers = usersData[index];
@@ -344,17 +351,28 @@
                     }
                 },
                 scales: {
-                    y1: {
+                    yUsers: {
                         type: 'linear',
                         display: true,
                         position: 'left',
                         beginAtZero: true,
-                        max: yAxisMax,
-                        ticks: {
-                            stepSize: 10
-                        },
+                        max: yUsersMax,
                         grid: { borderDash: [5, 5], color: '#f3f4f6' },
-                        title: { display: true, text: 'Quantidade' }
+                        title: { display: true, text: 'Atendimentos', color: '#6b7280' },
+                        ticks: { color: '#6b7280' }
+                    },
+                    ySales: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        beginAtZero: true,
+                        max: ySalesMax,
+                        grid: { display: false },
+                        title: { display: true, text: 'Vendas', color: '#4f46e5' },
+                        ticks: { 
+                            color: '#4f46e5',
+                            stepSize: 1
+                        }
                     },
                     x: {
                         grid: { display: false }
