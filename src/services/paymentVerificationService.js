@@ -66,7 +66,7 @@ const paymentVerificationService = {
    */
   async getPendingPayments() {
     const query = `
-      SELECT id, voucher_code
+      SELECT id, voucher_code, telefone
       FROM bali_park.vendas
       WHERE paid = false
         AND voucher_code IS NOT NULL
@@ -80,7 +80,7 @@ const paymentVerificationService = {
   /**
    * Atualiza o status de pagamento de uma venda
    */
-  async updatePaymentStatus(id, paid) {
+  async updatePaymentStatus(id, paid, voucherCode, telefone) {
     const query = `
       UPDATE bali_park.vendas
       SET paid = $1
@@ -88,6 +88,25 @@ const paymentVerificationService = {
     `;
     
     await db.query(query, [paid, id]);
+
+    // Se a venda foi paga, tenta atualizar o voucher na tabela users pelo telefone (últimos 5 dígitos)
+    if (paid && telefone && voucherCode) {
+      try {
+        const last5Digits = telefone.slice(-5);
+        const userUpdateQuery = `
+          UPDATE bali_park.users
+          SET voucher_venda = $1
+          WHERE telefone LIKE '%' || $2
+            AND voucher_venda IS NULL
+        `;
+        const userResult = await db.query(userUpdateQuery, [voucherCode, last5Digits]);
+        if (userResult.rowCount > 0) {
+          console.log(`✓ Vinculei voucher ${voucherCode} a ${userResult.rowCount} usuário(s) com final de telefone ${last5Digits}`);
+        }
+      } catch (err) {
+        console.error(`Erro ao vincular voucher ao usuário:`, err.message);
+      }
+    }
   },
 
   /**
@@ -107,7 +126,7 @@ const paymentVerificationService = {
         const result = await this.checkVoucherStatus(sale.voucher_code);
         
         if (result.success && result.isPaid) {
-          await this.updatePaymentStatus(sale.id, true);
+          await this.updatePaymentStatus(sale.id, true, sale.voucher_code, sale.telefone);
           console.log(`✓ Venda #${sale.id} (${sale.voucher_code}) marcada como PAGA`);
           updated++;
         } else if (!result.success) {
