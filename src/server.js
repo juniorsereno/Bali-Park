@@ -17,13 +17,12 @@ app.get('/', async (req, res) => {
     // Obter parâmetros de data da query string
     const { dataInicial, dataFinal } = req.query;
     
-    // Definir datas padrão (mês atual)
+    // Definir datas padrão (mês atual até hoje)
     const hoje = new Date();
     const primeiroDiaMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-    const ultimoDiaMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
     
     const dataInicialFormatada = dataInicial || primeiroDiaMes.toISOString().split('T')[0];
-    const dataFinalFormatada = dataFinal || ultimoDiaMes.toISOString().split('T')[0];
+    const dataFinalFormatada = dataFinal || hoje.toISOString().split('T')[0];
     
     // Buscar dados em paralelo para performance
     const [kpi, charts, monthlyTable, lastSalesTable] = await Promise.all([
