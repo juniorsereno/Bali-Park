@@ -226,6 +226,50 @@
             </div>
         </div>
 
+        <h2 style="font-size: 1.3rem; font-weight: 600; margin: 30px 0 15px; color: var(--text-primary);">Métricas Anúncio Facebook</h2>
+        <!-- Anuncio FB Grid -->
+        <div class="kpi-grid">
+            <div class="card">
+                <div class="kpi-title">Faturamento Total</div>
+                <div class="kpi-value highlight"><%= kpi.af_faturamento %></div>
+            </div>
+            <div class="card">
+                <div class="kpi-title">Vendas Totais</div>
+                <div class="kpi-value"><%= kpi.af_vendas %></div>
+            </div>
+            <div class="card">
+                <div class="kpi-title">Ticket Médio</div>
+                <div class="kpi-value"><%= kpi.af_ticket %></div>
+            </div>
+            <div class="card">
+                <div class="kpi-title">Conv. de Resposta</div>
+                <div class="kpi-value green"><%= kpi.af_taxaResposta %></div>
+                <div style="font-size: 0.8rem; color: #999; margin-top:5px;">
+                    <%= kpi.af_atendimentoResp %> resp. / <%= kpi.af_atendimentoTotal %> envios
+                </div>
+            </div>
+        </div>
+
+        <!-- Anuncio FB Bottom Row -->
+        <div class="kpi-grid">
+            <div class="card">
+                <div class="kpi-title">Leads Anúncio FB</div>
+                <div class="kpi-value"><%= kpi.af_leads %></div>
+            </div>
+            <div class="card">
+                <div class="kpi-title">Interagiram</div>
+                <div class="kpi-value highlight"><%= kpi.af_interagiram %></div>
+            </div>
+            <div class="card">
+                <div class="kpi-title">Conv. Geral (Vendas/Total)</div>
+                <div class="kpi-value highlight"><%= kpi.af_convGeral %></div>
+            </div>
+            <div class="card">
+                <div class="kpi-title">Conv. Real (Vendas/Interag.)</div>
+                <div class="kpi-value green"><%= kpi.af_convReal %></div>
+            </div>
+        </div>
+
         <h2 style="font-size: 1.3rem; font-weight: 600; margin: 30px 0 15px; color: var(--text-primary);">Métricas Fila Central de Vendas</h2>
         <!-- Top Row Cards -->
         <div class="kpi-grid">
