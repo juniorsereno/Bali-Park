@@ -22,10 +22,10 @@ const dashboardService = {
       ),
       period_users AS (
         SELECT
-          COUNT(*) FILTER (WHERE source = 'central_vendas') as total_clientes,
-          COUNT(CASE WHEN message_count > 1 AND source = 'central_vendas' THEN 1 END) as clientes_interagiram,
-          COUNT(*) FILTER (WHERE source = 'central_vendas') as leads_central_vendas,
-          COUNT(CASE WHEN message_count > 2 AND source = 'central_vendas' THEN 1 END) as interagiram_central
+          COUNT(*) FILTER (WHERE source IN ('central_vendas', 'anuncio_fb')) as total_clientes,
+          COUNT(CASE WHEN message_count > 1 AND source IN ('central_vendas', 'anuncio_fb') THEN 1 END) as clientes_interagiram,
+          COUNT(*) FILTER (WHERE source IN ('central_vendas', 'anuncio_fb')) as leads_central_vendas,
+          COUNT(CASE WHEN message_count > 2 AND source IN ('central_vendas', 'anuncio_fb') THEN 1 END) as interagiram_central
         FROM bali_park.users
         WHERE DATE(criado_as) BETWEEN $1::date AND $2::date
       ),
@@ -128,8 +128,8 @@ const dashboardService = {
       daily_users AS (
         SELECT
           DATE(criado_as) as date,
-          COUNT(*) FILTER (WHERE source = 'central_vendas') as total_users,
-          COUNT(CASE WHEN message_count > 2 AND source = 'central_vendas' THEN 1 END) as active_users
+          COUNT(*) FILTER (WHERE source IN ('central_vendas', 'anuncio_fb')) as total_users,
+          COUNT(CASE WHEN message_count > 2 AND source IN ('central_vendas', 'anuncio_fb') THEN 1 END) as active_users
         FROM bali_park.users
         WHERE DATE(criado_as) BETWEEN $1::date AND $2::date
         GROUP BY 1

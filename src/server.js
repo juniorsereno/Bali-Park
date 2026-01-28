@@ -11,6 +11,9 @@ const PORT = process.env.PORT || 3000;
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '../views'));
 
+// Servir arquivos estáticos (imagens, etc.)
+app.use(express.static(path.join(__dirname, '../public')));
+
 // Rota Principal
 app.get('/', async (req, res) => {
   try {
