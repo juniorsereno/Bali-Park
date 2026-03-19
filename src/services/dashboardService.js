@@ -4,12 +4,10 @@ const dashboardService = {
   async getKPIs(dataInicial, dataFinal) {
     // KPIs Gerais (Período Selecionado) - Apenas vendas pagas (paid = true)
     const query = `
-      WITH period_transbordo_vouchers AS (
+      WITH      period_transbordo_vouchers AS (
         SELECT voucher_venda
         FROM bali_park.users
-        WHERE source = 'transbordo_central_vendas'
-          AND voucher_venda IS NOT NULL
-          AND DATE(criado_as) BETWEEN $1::date AND $2::date
+        WHERE false -- Disable exclusions
       ),
       period_sales AS (
         SELECT
@@ -33,10 +31,10 @@ const dashboardService = {
         SELECT
           COUNT(*) as leads_transbordo,
           COUNT(*) FILTER (WHERE message_count > 2) as interagiram_transbordo,
-          COUNT(*) FILTER (WHERE voucher_venda IS NOT NULL) as vendas_transbordo,
-          ARRAY_AGG(voucher_venda) FILTER (WHERE voucher_venda IS NOT NULL) as transbordo_vouchers
+          0 as vendas_transbordo,
+          ARRAY[]::varchar[] as transbordo_vouchers
         FROM bali_park.users
-        WHERE source = 'transbordo_central_vendas'
+        WHERE source = 'anuncio_fb'
           AND DATE(criado_as) BETWEEN $1::date AND $2::date
       ),
       transbordo_revenue AS (
@@ -107,9 +105,7 @@ const dashboardService = {
       daily_transbordo_vouchers AS (
         SELECT DATE(criado_as) as date, voucher_venda
         FROM bali_park.users
-        WHERE source = 'transbordo_central_vendas'
-          AND voucher_venda IS NOT NULL
-          AND DATE(criado_as) BETWEEN $1::date AND $2::date
+        WHERE false -- Disable exclusions
       ),
       daily_sales AS (
         SELECT
