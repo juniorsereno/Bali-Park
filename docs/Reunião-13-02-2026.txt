@@ -1,0 +1,21 @@
+Discursões:
+
+Day User:
+
+Campanha independente para Babi IA no valor de R$ 2.500,00 com expectativa de vender R$ 20.000,00
+
+
+Carteirinha:
+
+Contato para renovação (anual) da carteirinha dentro do multi clubes
+Tratamento de objeções agressivo e finalização da renovação
+Acesso do Gabriel Bastos ao Vartana Chat para finalização da renovação (criação do link de pagamento)
+Fluxo: recebimento de um excel com todos os clientes de carteirinha -> Envio de template com lembrete de vencimento da carteirinha e chance de renovação -> Tratar com o cliente para ele renovar a carteirinha dos participantes, nesse passo existe uma infinidade de objeções do cliente que devem ser tratadas -> após cliente concordar com a renovação transferir para Gabriel efetuar a finalização criando link de pagamento dentro da plataforma multi clubes.
+
+Passaporte:
+
+Venda do passaporte dentro do multi clubes, mesmo processo de triagem, tratamento, venda e transferencia, irá funcionar como SDR
+
+Vartana Chat:
+
+Implementar fluxo de carteirinha para o Gabriel

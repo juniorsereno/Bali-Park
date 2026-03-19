@@ -7,7 +7,14 @@ const dashboardService = {
       WITH period_transbordo_vouchers AS (
         SELECT voucher_venda
         FROM bali_park.users
-        WHERE source = 'transbordo_central_vendas'
+        WHERE source = 'lead_site'
+          AND voucher_venda IS NOT NULL
+          AND DATE(criado_as) BETWEEN $1::date AND $2::date
+      ),
+      central_vendas_vouchers AS (
+        SELECT voucher_venda
+        FROM bali_park.users
+        WHERE source = 'central_vendas'
           AND voucher_venda IS NOT NULL
           AND DATE(criado_as) BETWEEN $1::date AND $2::date
       ),
@@ -18,12 +25,12 @@ const dashboardService = {
         FROM bali_park.vendas
         WHERE paid = true
           AND DATE(created_at) BETWEEN $1::date AND $2::date
-          AND voucher_code NOT IN (SELECT voucher_venda FROM period_transbordo_vouchers)
+          AND voucher_code IN (SELECT voucher_venda FROM central_vendas_vouchers)
       ),
       period_users AS (
         SELECT
           COUNT(*) FILTER (WHERE source = 'central_vendas') as total_clientes,
-          COUNT(CASE WHEN message_count > 1 AND source = 'central_vendas' THEN 1 END) as clientes_interagiram,
+          COUNT(CASE WHEN message_count > 2 AND source = 'central_vendas' THEN 1 END) as clientes_interagiram,
           COUNT(*) FILTER (WHERE source = 'central_vendas') as leads_central_vendas,
           COUNT(CASE WHEN message_count > 2 AND source = 'central_vendas' THEN 1 END) as interagiram_central
         FROM bali_park.users
@@ -32,7 +39,7 @@ const dashboardService = {
       anuncio_fb_users AS (
         SELECT
           COUNT(*) as total_clientes,
-          COUNT(CASE WHEN message_count > 1 THEN 1 END) as clientes_interagiram,
+          COUNT(CASE WHEN message_count > 2 THEN 1 END) as clientes_interagiram,
           COUNT(*) as leads_anuncio_fb,
           COUNT(CASE WHEN message_count > 2 THEN 1 END) as interagiram_anuncio_fb
         FROM bali_park.users
@@ -62,7 +69,7 @@ const dashboardService = {
           COUNT(*) FILTER (WHERE voucher_venda IS NOT NULL) as vendas_transbordo,
           ARRAY_AGG(voucher_venda) FILTER (WHERE voucher_venda IS NOT NULL) as transbordo_vouchers
         FROM bali_park.users
-        WHERE source = 'transbordo_central_vendas'
+        WHERE source = 'lead_site'
           AND DATE(criado_as) BETWEEN $1::date AND $2::date
       ),
       transbordo_revenue AS (
@@ -153,25 +160,14 @@ const dashboardService = {
       WITH date_series AS (
         SELECT generate_series($1::date, $2::date, '1 day')::date AS date
       ),
-      daily_transbordo_vouchers AS (
-        SELECT DATE(criado_as) as date, voucher_venda
-        FROM bali_park.users
-        WHERE source = 'transbordo_central_vendas'
-          AND voucher_venda IS NOT NULL
-          AND DATE(criado_as) BETWEEN $1::date AND $2::date
-      ),
       daily_sales AS (
         SELECT
           DATE(created_at) as date,
           COUNT(*) as total_vendas,
           COALESCE(SUM(valor_total), 0) as faturamento
-        FROM bali_park.vendas v
+        FROM bali_park.vendas
         WHERE paid = true
           AND DATE(created_at) BETWEEN $1::date AND $2::date
-          AND NOT EXISTS (
-            SELECT 1 FROM daily_transbordo_vouchers dtv
-            WHERE dtv.voucher_venda = v.voucher_code AND dtv.date = DATE(v.created_at)
-          )
         GROUP BY 1
       ),
       daily_users AS (
