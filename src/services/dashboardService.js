@@ -36,7 +36,7 @@ const dashboardService = {
           COUNT(*) FILTER (WHERE message_count > 1) as responderam,
           COUNT(*) FILTER (WHERE message_count > 2) as interagiram
         FROM bali_park.users
-        WHERE (CASE WHEN DATE(criado_as) < '2026-04-01' THEN 'anuncio_fb' ELSE source END) != 'anuncio_fb'
+        WHERE source != 'anuncio_fb'
           AND DATE(criado_as) BETWEEN $1::date AND $2::date
       ),
       fb_users AS (
@@ -45,7 +45,7 @@ const dashboardService = {
           COUNT(*) FILTER (WHERE message_count > 1) as responderam,
           COUNT(*) FILTER (WHERE message_count > 2) as interagiram
         FROM bali_park.users
-        WHERE (CASE WHEN DATE(criado_as) < '2026-04-01' THEN 'anuncio_fb' ELSE source END) = 'anuncio_fb'
+        WHERE source = 'anuncio_fb'
           AND DATE(criado_as) BETWEEN $1::date AND $2::date
       )
       SELECT
