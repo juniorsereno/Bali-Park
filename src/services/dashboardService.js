@@ -8,7 +8,10 @@ const dashboardService = {
         SELECT
           v.valor_total,
           v.voucher_code,
-          (SELECT u.source FROM bali_park.users u WHERE u.voucher_venda = v.voucher_code LIMIT 1) as user_source
+          CASE 
+            WHEN DATE(v.created_at) < '2026-04-01' THEN 'anuncio_fb'
+            ELSE (SELECT u.source FROM bali_park.users u WHERE u.voucher_venda = v.voucher_code LIMIT 1)
+          END as user_source
         FROM bali_park.vendas v
         WHERE v.paid = true
           AND DATE(v.created_at) BETWEEN $1::date AND $2::date
@@ -33,7 +36,7 @@ const dashboardService = {
           COUNT(*) FILTER (WHERE message_count > 1) as responderam,
           COUNT(*) FILTER (WHERE message_count > 2) as interagiram
         FROM bali_park.users
-        WHERE source != 'anuncio_fb'
+        WHERE (CASE WHEN DATE(criado_as) < '2026-04-01' THEN 'anuncio_fb' ELSE source END) != 'anuncio_fb'
           AND DATE(criado_as) BETWEEN $1::date AND $2::date
       ),
       fb_users AS (
@@ -42,7 +45,7 @@ const dashboardService = {
           COUNT(*) FILTER (WHERE message_count > 1) as responderam,
           COUNT(*) FILTER (WHERE message_count > 2) as interagiram
         FROM bali_park.users
-        WHERE source = 'anuncio_fb'
+        WHERE (CASE WHEN DATE(criado_as) < '2026-04-01' THEN 'anuncio_fb' ELSE source END) = 'anuncio_fb'
           AND DATE(criado_as) BETWEEN $1::date AND $2::date
       )
       SELECT
