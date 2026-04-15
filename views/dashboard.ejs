@@ -194,79 +194,85 @@
         </header>
 
         <h2 style="font-size: 1.3rem; font-weight: 600; margin: 30px 0 15px; color: var(--text-primary);">Métricas Leads Site</h2>
-        <!-- Transbordo Grid -->
         <div class="kpi-grid">
             <div class="card">
                 <div class="kpi-title">Faturamento Total</div>
-                <div class="kpi-value highlight"><%= kpi.faturamentoTransbordo %></div>
+                <div class="kpi-value highlight"><%= kpi.siteFaturamento %></div>
             </div>
             <div class="card">
                 <div class="kpi-title">Vendas Totais</div>
-                <div class="kpi-value"><%= kpi.vendasTransbordo %></div>
+                <div class="kpi-value"><%= kpi.siteVendas %></div>
             </div>
             <div class="card">
+                <div class="kpi-title">Ticket Médio</div>
+                <div class="kpi-value"><%= kpi.siteTicket %></div>
+            </div>
+            <div class="card">
+                <div class="kpi-title">Taxa Interação</div>
+                <div class="kpi-value green"><%= kpi.siteTaxaResposta %></div>
+                <div style="font-size: 0.8rem; color: #999; margin-top:5px;">
+                    interagiram / leads
+                </div>
+            </div>
+        </div>
+        <div class="kpi-grid">
+            <div class="card">
                 <div class="kpi-title">Leads Totais</div>
-                <div class="kpi-value"><%= kpi.leadsTransbordo %></div>
+                <div class="kpi-value"><%= kpi.siteLeads %></div>
             </div>
             <div class="card">
                 <div class="kpi-title">Interagiram</div>
-                <div class="kpi-value highlight"><%= kpi.interagiramTransbordo %></div>
-            </div>
-            <div class="card">
-                <div class="kpi-title">Taxa Resposta</div>
-                <div class="kpi-value green"><%= kpi.taxaRespostaTransbordo %></div>
+                <div class="kpi-value highlight"><%= kpi.siteInteragiram %></div>
             </div>
             <div class="card">
                 <div class="kpi-title">Conv. Geral (Vendas/Total)</div>
-                <div class="kpi-value highlight"><%= kpi.convTransbordo %></div>
+                <div class="kpi-value highlight"><%= kpi.siteConvGeral %></div>
             </div>
             <div class="card">
                 <div class="kpi-title">Conv. Real (Vendas/Interag.)</div>
-                <div class="kpi-value green"><%= kpi.convRealTransbordo %></div>
+                <div class="kpi-value green"><%= kpi.siteConvReal %></div>
             </div>
         </div>
 
         <h2 style="font-size: 1.3rem; font-weight: 600; margin: 30px 0 15px; color: var(--text-primary);">Métricas Anúncio Facebook Ads</h2>
-        <!-- Top Row Cards -->
         <div class="kpi-grid">
             <div class="card">
                 <div class="kpi-title">Faturamento Total</div>
-                <div class="kpi-value highlight"><%= kpi.faturamento %></div>
+                <div class="kpi-value highlight"><%= kpi.fbFaturamento %></div>
             </div>
             <div class="card">
                 <div class="kpi-title">Vendas Totais</div>
-                <div class="kpi-value"><%= kpi.vendas %></div>
+                <div class="kpi-value"><%= kpi.fbVendas %></div>
             </div>
             <div class="card">
                 <div class="kpi-title">Ticket Médio</div>
-                <div class="kpi-value"><%= kpi.ticket %></div>
+                <div class="kpi-value"><%= kpi.fbTicket %></div>
             </div>
             <div class="card">
-                <div class="kpi-title">Conv. de Resposta</div>
-                <div class="kpi-value green"><%= kpi.taxaResposta %></div>
+                <div class="kpi-title">Taxa Interação</div>
+                <div class="kpi-value green"><%= kpi.fbTaxaResposta %></div>
                 <div style="font-size: 0.8rem; color: #999; margin-top:5px;">
-                    <%= kpi.atendimentoResp %> resp. / <%= kpi.atendimentoTotal %> envios
+                    interagiram / leads
                 </div>
             </div>
         </div>
 
-        <!-- Bottom Row Cards -->
         <div class="kpi-grid">
             <div class="card">
                 <div class="kpi-title">Leads Anúncio Facebook Ads</div>
-                <div class="kpi-value"><%= kpi.leadsCentralVendas %></div>
+                <div class="kpi-value"><%= kpi.fbLeads %></div>
             </div>
             <div class="card">
                 <div class="kpi-title">Interagiram</div>
-                <div class="kpi-value highlight"><%= kpi.interagiramCentral %></div>
+                <div class="kpi-value highlight"><%= kpi.fbInteragiram %></div>
             </div>
             <div class="card">
                 <div class="kpi-title">Conv. Geral (Vendas/Total)</div>
-                <div class="kpi-value highlight"><%= kpi.convGeral %></div>
+                <div class="kpi-value highlight"><%= kpi.fbConvGeral %></div>
             </div>
             <div class="card">
                 <div class="kpi-title">Conv. Real (Vendas/Interag.)</div>
-                <div class="kpi-value green"><%= kpi.convReal %></div>
+                <div class="kpi-value green"><%= kpi.fbConvReal %></div>
             </div>
         </div>
 

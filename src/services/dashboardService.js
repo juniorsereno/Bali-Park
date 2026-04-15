@@ -2,97 +2,94 @@ const db = require('../database');
 
 const dashboardService = {
   async getKPIs(dataInicial, dataFinal) {
-    // KPIs Gerais (Período Selecionado) - Apenas vendas pagas (paid = true)
     const query = `
-      WITH      period_transbordo_vouchers AS (
-        SELECT voucher_venda
+      WITH
+      sales_with_source AS (
+        SELECT
+          v.valor_total,
+          v.voucher_code,
+          (SELECT u.source FROM bali_park.users u WHERE u.voucher_venda = v.voucher_code LIMIT 1) as user_source
+        FROM bali_park.vendas v
+        WHERE v.paid = true
+          AND DATE(v.created_at) BETWEEN $1::date AND $2::date
+      ),
+      site_sales AS (
+        SELECT
+          COUNT(*) as vendas,
+          COALESCE(SUM(valor_total), 0) as faturamento
+        FROM sales_with_source
+        WHERE user_source != 'anuncio_fb' OR user_source IS NULL
+      ),
+      fb_sales AS (
+        SELECT
+          COUNT(*) as vendas,
+          COALESCE(SUM(valor_total), 0) as faturamento
+        FROM sales_with_source
+        WHERE user_source = 'anuncio_fb'
+      ),
+      site_users AS (
+        SELECT
+          COUNT(*) as leads,
+          COUNT(*) FILTER (WHERE message_count > 1) as responderam,
+          COUNT(*) FILTER (WHERE message_count > 2) as interagiram
         FROM bali_park.users
-        WHERE false -- Disable exclusions
+        WHERE source != 'anuncio_fb'
+          AND DATE(criado_as) BETWEEN $1::date AND $2::date
       ),
-      period_sales AS (
+      fb_users AS (
         SELECT
-          COUNT(*) as total_vendas,
-          SUM(valor_total) as faturamento
-        FROM bali_park.vendas
-        WHERE paid = true
-          AND DATE(created_at) BETWEEN $1::date AND $2::date
-          AND voucher_code NOT IN (SELECT voucher_venda FROM period_transbordo_vouchers)
-      ),
-      period_users AS (
-        SELECT
-          COUNT(*) FILTER (WHERE source IN ('central_vendas', 'anuncio_fb')) as total_clientes,
-          COUNT(CASE WHEN message_count > 1 AND source IN ('central_vendas', 'anuncio_fb') THEN 1 END) as clientes_interagiram,
-          COUNT(*) FILTER (WHERE source IN ('central_vendas', 'anuncio_fb')) as leads_central_vendas,
-          COUNT(CASE WHEN message_count > 2 AND source IN ('central_vendas', 'anuncio_fb') THEN 1 END) as interagiram_central
-        FROM bali_park.users
-        WHERE DATE(criado_as) BETWEEN $1::date AND $2::date
-      ),
-      transbordo_stats AS (
-        SELECT
-          COUNT(*) as leads_transbordo,
-          COUNT(*) FILTER (WHERE message_count > 2) as interagiram_transbordo,
-          0 as vendas_transbordo,
-          ARRAY[]::varchar[] as transbordo_vouchers
+          COUNT(*) as leads,
+          COUNT(*) FILTER (WHERE message_count > 1) as responderam,
+          COUNT(*) FILTER (WHERE message_count > 2) as interagiram
         FROM bali_park.users
         WHERE source = 'anuncio_fb'
           AND DATE(criado_as) BETWEEN $1::date AND $2::date
-      ),
-      transbordo_revenue AS (
-        SELECT COALESCE(SUM(valor_total), 0) as faturamento_transbordo
-        FROM bali_park.vendas
-        WHERE paid = true
-          AND DATE(created_at) BETWEEN $1::date AND $2::date
-          AND voucher_code IN (SELECT UNNEST(transbordo_vouchers) FROM transbordo_stats)
       )
       SELECT
-        COALESCE(s.faturamento, 0) as faturamento,
-        COALESCE(s.total_vendas, 0) as vendas,
-        COALESCE(u.total_clientes, 0) as atendimentoTotal,
-        COALESCE(u.clientes_interagiram, 0) as atendimentoResp,
-        COALESCE(u.leads_central_vendas, 0) as leadsCentralVendas,
-        COALESCE(u.interagiram_central, 0) as interagiram_central,
-        COALESCE(ts.leads_transbordo, 0) as leads_transbordo,
-        COALESCE(ts.interagiram_transbordo, 0) as interagiram_transbordo,
-        COALESCE(ts.vendas_transbordo, 0) as vendas_transbordo,
-        COALESCE(tr.faturamento_transbordo, 0) as faturamento_transbordo
-      FROM period_sales s, period_users u, transbordo_stats ts, transbordo_revenue tr;
+        ss.faturamento as site_faturamento,
+        ss.vendas as site_vendas,
+        su.leads as site_leads,
+        su.responderam as site_responderam,
+        su.interagiram as site_interagiram,
+        fs.faturamento as fb_faturamento,
+        fs.vendas as fb_vendas,
+        fu.leads as fb_leads,
+        fu.responderam as fb_responderam,
+        fu.interagiram as fb_interagiram
+      FROM site_sales ss, fb_sales fs, site_users su, fb_users fu
     `;
-    
+
     const result = await db.query(query, [dataInicial, dataFinal]);
     const data = result.rows[0];
-    
-    // Cálculos derivados
-    const ticket = data.vendas > 0 ? data.faturamento / data.vendas : 0;
-    const taxaResposta = data.atendimentototal > 0 ? (data.atendimentoresp / data.atendimentototal) * 100 : 0;
-    
-    // Novas Taxas
-    const convGeral = data.atendimentototal > 0 ? (data.vendas / data.atendimentototal) * 100 : 0;
-    const convReal = data.atendimentoresp > 0 ? (data.vendas / data.atendimentoresp) * 100 : 0;
+    const fmt = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
 
-    // Cálculos Transbordo
-    const taxaRespostaTransbordo = data.leads_transbordo > 0 ? (data.interagiram_transbordo / data.leads_transbordo) * 100 : 0;
-    const convTransbordo = data.leads_transbordo > 0 ? (data.vendas_transbordo / data.leads_transbordo) * 100 : 0;
-    const convRealTransbordo = data.interagiram_transbordo > 0 ? (data.vendas_transbordo / data.interagiram_transbordo) * 100 : 0;
+    const siteTicket = data.site_vendas > 0 ? data.site_faturamento / data.site_vendas : 0;
+    const siteTaxaInteracao = data.site_leads > 0 ? (data.site_interagiram / data.site_leads) * 100 : 0;
+    const siteConvGeral = data.site_leads > 0 ? (data.site_vendas / data.site_leads) * 100 : 0;
+    const siteConvReal = data.site_interagiram > 0 ? (data.site_vendas / data.site_interagiram) * 100 : 0;
+
+    const fbTicket = data.fb_vendas > 0 ? data.fb_faturamento / data.fb_vendas : 0;
+    const fbTaxaInteracao = data.fb_leads > 0 ? (data.fb_interagiram / data.fb_leads) * 100 : 0;
+    const fbConvGeral = data.fb_leads > 0 ? (data.fb_vendas / data.fb_leads) * 100 : 0;
+    const fbConvReal = data.fb_interagiram > 0 ? (data.fb_vendas / data.fb_interagiram) * 100 : 0;
 
     return {
-      faturamento: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(data.faturamento),
-      vendas: data.vendas,
-      ticket: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(ticket),
-      taxaResposta: taxaResposta.toFixed(1) + '%',
-      atendimentoResp: data.atendimentoresp,
-      atendimentoTotal: data.atendimentototal,
-      leadsCentralVendas: data.leadscentralvendas,
-      interagiramCentral: data.interagiram_central,
-      convGeral: convGeral.toFixed(2) + '%',
-      convReal: convReal.toFixed(2) + '%',
-      // Transbordo
-      faturamentoTransbordo: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(data.faturamento_transbordo),
-      vendasTransbordo: data.vendas_transbordo,
-      leadsTransbordo: data.leads_transbordo,
-      interagiramTransbordo: data.interagiram_transbordo,
-      taxaRespostaTransbordo: taxaRespostaTransbordo.toFixed(1) + '%',
-      convTransbordo: convTransbordo.toFixed(2) + '%',
-      convRealTransbordo: convRealTransbordo.toFixed(2) + '%'
+      siteFaturamento: fmt(data.site_faturamento),
+      siteVendas: data.site_vendas,
+      siteTicket: fmt(siteTicket),
+      siteLeads: data.site_leads,
+      siteInteragiram: data.site_interagiram,
+      siteTaxaResposta: siteTaxaInteracao.toFixed(1) + '%',
+      siteConvGeral: siteConvGeral.toFixed(2) + '%',
+      siteConvReal: siteConvReal.toFixed(2) + '%',
+      fbFaturamento: fmt(data.fb_faturamento),
+      fbVendas: data.fb_vendas,
+      fbTicket: fmt(fbTicket),
+      fbLeads: data.fb_leads,
+      fbInteragiram: data.fb_interagiram,
+      fbTaxaResposta: fbTaxaInteracao.toFixed(1) + '%',
+      fbConvGeral: fbConvGeral.toFixed(2) + '%',
+      fbConvReal: fbConvReal.toFixed(2) + '%',
     };
   },
 
