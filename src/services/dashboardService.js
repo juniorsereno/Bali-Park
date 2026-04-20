@@ -124,8 +124,8 @@ const dashboardService = {
       daily_users AS (
         SELECT
           DATE(criado_as) as date,
-          COUNT(*) FILTER (WHERE source IN ('central_vendas', 'anuncio_fb')) as total_users,
-          COUNT(CASE WHEN message_count > 2 AND source IN ('central_vendas', 'anuncio_fb') THEN 1 END) as active_users
+          COUNT(*) FILTER (WHERE source != 'anuncio_fb') as total_users,
+          COUNT(CASE WHEN message_count > 2 AND source != 'anuncio_fb' THEN 1 END) as active_users
         FROM bali_park.users
         WHERE DATE(criado_as) BETWEEN $1::date AND $2::date
         GROUP BY 1
