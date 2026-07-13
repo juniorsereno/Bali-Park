@@ -1,9 +1,18 @@
 const axios = require('axios');
+const https = require('https');
+const crypto = require('crypto');
 const db = require('../database');
 
-const SOAP_URL = process.env.MULTICLUBES_SOAP_URL || 'https://multiclubes.balipark.com.br/(a655f81b-8437-48ec-8876-069664ee891a)/TicketsV2.svc';
+const SOAP_URL = process.env.MULTICLUBES_SOAP_URL || 'https://onlineservices.balipark.com.br:4443/(a655f81b-8437-48ec-8876-069664ee891a)/tickets/v2.svc';
 const SOAP_ACTION = 'http://multiclubes.com.br/tickets/v2/IService/SearchVoucher';
 const AUTH_KEY = process.env.MULTICLUBES_AUTH_KEY || '3fe6ca43-65cc-4776-9fb8-667855dbd6e0';
+
+const httpsAgent = new https.Agent({
+  rejectUnauthorized: false,
+  secureOptions: crypto.constants.SSL_OP_LEGACY_SERVER_CONNECT,
+  minVersion: 'TLSv1',
+  ciphers: 'DEFAULT:@SECLEVEL=0'
+});
 
 const paymentVerificationService = {
   /**
@@ -35,6 +44,7 @@ const paymentVerificationService = {
           'Content-Type': 'text/xml; charset=utf-8',
           'SOAPAction': SOAP_ACTION
         },
+        httpsAgent,
         timeout: 30000
       });
 
