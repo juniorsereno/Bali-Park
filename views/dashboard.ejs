@@ -131,6 +131,10 @@
         .card-chart .chart-container {
             flex: 1;
             min-height: 300px;
+            max-height: 380px;
+            margin-top: auto;
+            margin-bottom: auto;
+            width: 100%;
         }
         @media (max-width: 768px) {
             .card-chart .chart-container {
@@ -485,7 +489,7 @@
         const hourlyLabels = <%- hourly.labels %>;
         const hourlySales = <%- hourly.sales %>;
         const hourlyRevenue = <%- hourly.revenue %>;
-        const yHourlyMax = Math.max(6, Math.ceil(Math.max(...hourlySales) * 1.2));
+        const yHourlyMax = Math.max(10, Math.ceil(Math.max(...hourlySales) * 1.6));
 
         new Chart(ctxHourly, {
             type: 'bar',
