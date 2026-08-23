@@ -103,12 +103,40 @@
         /* Layout Principal */
         .main-grid {
             display: grid;
-            grid-template-columns: 2fr 1fr; /* Gráfico maior que a tabela lateral */
             gap: 20px;
             margin-bottom: 30px;
+            align-items: stretch;
+        }
+        /* Gráfico grande + tabela lateral */
+        .main-grid.chart-with-side {
+            grid-template-columns: 2fr 1fr;
+        }
+        /* Gráfico menor + tabela larga */
+        .main-grid.table-dominant {
+            grid-template-columns: 1fr 2fr;
         }
         @media (max-width: 768px) {
-            .main-grid { grid-template-columns: 1fr; }
+            .main-grid.chart-with-side,
+            .main-grid.table-dominant { grid-template-columns: 1fr; }
+        }
+
+        /* Card com gráfico: gráfico preenche a altura do card */
+        .card.card-chart {
+            display: flex;
+            flex-direction: column;
+        }
+        .card-chart .section-title {
+            flex-shrink: 0;
+        }
+        .card-chart .chart-container {
+            flex: 1;
+            min-height: 300px;
+        }
+        @media (max-width: 768px) {
+            .card-chart .chart-container {
+                height: 300px;
+                flex: none;
+            }
         }
 
         /* Gráficos e Tabelas */
@@ -135,9 +163,10 @@
             border-bottom: 1px solid #e5e7eb;
         }
         td {
-            padding: 14px; /* Increased padding */
+            padding: 12px 14px; /* Increased padding */
             font-size: 1rem; /* Increased */
             border-bottom: 1px solid #f3f4f6;
+            font-variant-numeric: tabular-nums;
         }
         tr:last-child td { border-bottom: none; }
         
@@ -276,8 +305,8 @@
             </div>
         </div>
 
-        <div class="main-grid">
-            <div class="card">
+        <div class="main-grid chart-with-side">
+            <div class="card card-chart">
                 <div class="section-title">Evolução de Faturamento</div>
                 <div class="chart-container">
                     <canvas id="revenueChart"></canvas>
@@ -301,8 +330,8 @@
             </div>
         </div>
 
-        <div class="main-grid">
-            <div class="card">
+        <div class="main-grid table-dominant">
+            <div class="card card-chart">
                 <div class="section-title">Vendas por Horário</div>
                 <div class="chart-container">
                     <canvas id="hourlyChart"></canvas>
@@ -501,7 +530,14 @@
                         }
                     },
                     x: {
-                        grid: { display: false }
+                        grid: { display: false },
+                        ticks: {
+                            color: '#6b7280',
+                            maxRotation: 0,
+                            callback: function(value, index) {
+                                return index % 2 === 0 ? this.getLabelForValue(value) : '';
+                            }
+                        }
                     }
                 }
             }
