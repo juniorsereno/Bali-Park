@@ -114,6 +114,7 @@
         /* Gráfico menor + tabela larga */
         .main-grid.table-dominant {
             grid-template-columns: 1fr 2fr;
+            align-items: start;
         }
         @media (max-width: 768px) {
             .main-grid.chart-with-side,
@@ -129,17 +130,12 @@
             flex-shrink: 0;
         }
         .card-chart .chart-container {
-            flex: 1;
-            min-height: 300px;
-            max-height: 380px;
-            margin-top: auto;
-            margin-bottom: auto;
+            height: 340px;
             width: 100%;
         }
         @media (max-width: 768px) {
             .card-chart .chart-container {
                 height: 300px;
-                flex: none;
             }
         }
 
