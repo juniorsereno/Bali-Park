@@ -152,6 +152,39 @@ const dashboardService = {
     };
   },
 
+  async getHourlySales(dataInicial, dataFinal) {
+    // Vendas por Horário do Dia (Período Selecionado) - Apenas vendas pagas
+    const query = `
+      WITH hour_series AS (
+        SELECT generate_series(0, 23) AS hour
+      ),
+      hourly_sales AS (
+        SELECT
+          EXTRACT(HOUR FROM created_at)::int as hour,
+          COUNT(*) as total_vendas,
+          COALESCE(SUM(valor_total), 0) as faturamento
+        FROM bali_park.vendas v
+        WHERE paid = true
+          AND DATE(created_at) BETWEEN $1::date AND $2::date
+        GROUP BY 1
+      )
+      SELECT
+        hs.hour,
+        COALESCE(s.total_vendas, 0) as sales,
+        COALESCE(s.faturamento, 0) as revenue
+      FROM hour_series hs
+      LEFT JOIN hourly_sales s ON hs.hour = s.hour
+      ORDER BY hs.hour;
+    `;
+
+    const result = await db.query(query, [dataInicial, dataFinal]);
+    return {
+      labels: JSON.stringify(result.rows.map(r => `${String(r.hour).padStart(2, '0')}h`)),
+      sales: JSON.stringify(result.rows.map(r => parseInt(r.sales))),
+      revenue: JSON.stringify(result.rows.map(r => parseFloat(r.revenue)))
+    };
+  },
+
   async getMonthlyPerformance() {
     // Performance Mensal (Últimos 6 meses) - Apenas vendas pagas
     const query = `

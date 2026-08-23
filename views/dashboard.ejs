@@ -301,12 +301,20 @@
             </div>
         </div>
 
-        <div class="card">
-            <div class="section-title">
-                Últimas 10 Vendas
-                <span style="font-size:0.8rem; color:var(--text-secondary); font-weight:400;">Ordenado por data de compra</span>
+        <div class="main-grid">
+            <div class="card">
+                <div class="section-title">Vendas por Horário</div>
+                <div class="chart-container">
+                    <canvas id="hourlyChart"></canvas>
+                </div>
             </div>
-            <table style="width: 100%;">
+
+            <div class="card" style="overflow-x: auto;">
+                <div class="section-title">
+                    Últimas 10 Vendas
+                    <span style="font-size:0.8rem; color:var(--text-secondary); font-weight:400;">Ordenado por data de compra</span>
+                </div>
+                <table style="width: 100%;">
                 <thead>
                     <tr>
                         <th style="width: 30%">Data</th>
@@ -433,6 +441,62 @@
                         title: { display: true, text: 'Vendas', color: '#4f46e5' },
                         ticks: { 
                             color: '#4f46e5',
+                            stepSize: 1
+                        }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+
+        // Gráfico de Vendas por Horário
+        const ctxHourly = document.getElementById('hourlyChart').getContext('2d');
+        const hourlyLabels = <%- hourly.labels %>;
+        const hourlySales = <%- hourly.sales %>;
+        const hourlyRevenue = <%- hourly.revenue %>;
+        const yHourlyMax = Math.max(6, Math.ceil(Math.max(...hourlySales) * 1.2));
+
+        new Chart(ctxHourly, {
+            type: 'bar',
+            data: {
+                labels: hourlyLabels,
+                datasets: [
+                    {
+                        label: 'Vendas',
+                        data: hourlySales,
+                        backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                        borderColor: '#10b981',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            afterBody: function(context) {
+                                const index = context[0].dataIndex;
+                                const revenue = hourlyRevenue[index];
+                                const valorFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(revenue);
+                                return '\nValor: ' + valorFormatado;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: yHourlyMax,
+                        grid: { borderDash: [5, 5], color: '#f3f4f6' },
+                        title: { display: true, text: 'Vendas', color: '#10b981' },
+                        ticks: {
+                            color: '#10b981',
                             stepSize: 1
                         }
                     },

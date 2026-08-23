@@ -28,9 +28,10 @@ app.get('/', async (req, res) => {
     const dataFinalFormatada = dataFinal || hoje.toISOString().split('T')[0];
     
     // Buscar dados em paralelo para performance
-    const [kpi, charts, monthlyTable, lastSalesTable] = await Promise.all([
+    const [kpi, charts, hourly, monthlyTable, lastSalesTable] = await Promise.all([
       dashboardService.getKPIs(dataInicialFormatada, dataFinalFormatada),
       dashboardService.getDailyEvolution(dataInicialFormatada, dataFinalFormatada),
+      dashboardService.getHourlySales(dataInicialFormatada, dataFinalFormatada),
       dashboardService.getMonthlyPerformance(),
       dashboardService.getLastSales()
     ]);
@@ -38,6 +39,7 @@ app.get('/', async (req, res) => {
     res.render('dashboard', {
       kpi,
       charts,
+      hourly,
       tables: {
         mensal: monthlyTable,
         ultimas: lastSalesTable
