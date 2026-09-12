@@ -1,13 +1,25 @@
-version: '3.8'
-
 services:
   app:
     build: .
     container_name: bali-park-dashboard
-    restart: always
+    restart: unless-stopped
+    init: true
     ports:
       - "3000:3000"
     env_file:
       - .env
     environment:
       - NODE_ENV=production
+      - TZ=America/Sao_Paulo
+  sales-worker:
+    build: .
+    command: npm run worker:sales
+    profiles: ["rpa"]
+    init: true
+    restart: on-failure
+    shm_size: 256mb
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - TZ=America/Sao_Paulo

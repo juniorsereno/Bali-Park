@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Entrar · Bali Park</title><link rel="stylesheet" href="/assets/dashboard.css"></head>
+<body class="login-body">
+  <%- include('partials/icons') %>
+  <main class="login-layout">
+    <section class="login-story">
+      <div class="login-brand-row"><a class="brand" href="/"><span class="brand-mark"><img src="/assets/bali-park-logo.webp" alt="" width="46" height="46"></span><span><strong>BALI PARK</strong><small>BABI · AGENTE AI DE VENDAS</small></span></a><a class="powered-by powered-by-light" href="https://vartana.ia.br" target="_blank" rel="noopener noreferrer" aria-label="Visitar o site da Vartana"><img src="/assets/vartana-logo.svg" alt="Vartana" width="38" height="38"><small>Tecnologia <strong>Vartana</strong></small></a></div>
+      <div class="login-story-content"><div class="eyebrow">INTELIGÊNCIA QUE GERA RESULTADOS</div><h1>A Babi conversa.<br><span>Seu negócio avança.</span></h1><p>A agente AI de vendas criada pela Criativa AI para transformar atendimento em oportunidade para o Bali Park.</p><div class="story-tags"><span>Babi</span><span>Vendas</span><span>Performance</span></div></div>
+      <div class="login-art" aria-hidden="true"><div class="art-sun"></div><div class="art-wave wave-back"></div><div class="art-wave wave-front"></div><div class="art-wave wave-light"></div></div>
+      <span class="story-footer">Criativa AI · Tecnologia que trabalha pelo seu resultado.</span>
+    </section>
+    <section class="login-form-area">
+      <div class="login-card">
+        <span class="login-lock"><svg><use href="#lock"/></svg></span>
+        <div class="eyebrow">BEM-VINDO DE VOLTA</div><h2>Acompanhe a Babi</h2><p>Digite o código de acesso para ver o desempenho da agente AI de vendas do Bali Park.</p>
+        <% if (error) { %><div class="form-error" role="alert"><%= error %></div><% } %>
+        <form action="/login" method="post"><label for="code">Código de acesso</label><input id="code" name="code" type="password" autocomplete="current-password" placeholder="Digite seu código" required maxlength="256" autofocus><button class="button button-primary login-submit" type="submit">Entrar no dashboard<svg><use href="#arrow"/></svg></button></form>
+        <div class="login-reassurance"><svg><use href="#shield"/></svg>Painel exclusivo Bali Park + Criativa AI</div>
+      </div>
+      <p class="login-copyright">BABI · CRIATIVA AI</p>
+    </section>
+  </main>
+</body></html>
