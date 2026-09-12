@@ -1,415 +1,55 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Relatório Comercial</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <style>
-        :root {
-            --bg-color: #f3f4f6;
-            --card-bg: #ffffff;
-            --text-primary: #111827;
-            --text-secondary: #6b7280;
-            --accent-color: #4f46e5; /* Indigo */
-            --success-color: #10b981;
-            --warning-color: #f59e0b;
-            --border-radius: 12px;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            margin: 0;
-            padding: 20px;
-            -webkit-font-smoothing: antialiased;
-            font-size: 16px; /* Base font size increased */
-        }
-
-        .dashboard-container {
-            max-width: 1100px;
-            margin: 0 auto;
-        }
-
-        /* Header */
-        header {
-            margin-bottom: 30px;
-            text-align: center;
-        }
-        h1 {
-            font-size: 2.2rem; /* Increased */
-            font-weight: 700;
-            color: var(--text-primary);
-            margin: 0;
-        }
-        p.subtitle {
-            color: var(--text-secondary);
-            margin-top: 5px;
-        }
-
-        /* KPI Grid */
-        .kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .card {
-            background: var(--card-bg);
-            border-radius: var(--border-radius);
-            padding: 24px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-            transition: transform 0.2s;
-        }
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        }
-
-        .kpi-title {
-            font-size: 1rem; /* Increased */
-            font-weight: 500;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 8px;
-        }
-        .kpi-value {
-            font-size: 2.2rem; /* Increased */
-            font-weight: 700;
-            color: var(--text-primary);
-        }
-        .kpi-value.highlight { color: var(--accent-color); }
-        .kpi-value.green { color: var(--success-color); }
-
-        /* Layout Principal */
-        .main-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr; /* Gráfico maior que a tabela lateral */
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-        @media (max-width: 768px) {
-            .main-grid { grid-template-columns: 1fr; }
-        }
-
-        /* Gráficos e Tabelas */
-        .section-title {
-            font-size: 1.3rem; /* Increased */
-            font-weight: 600;
-            margin-bottom: 15px;
-            color: var(--text-primary);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th {
-            text-align: left;
-            padding: 14px; /* Increased padding */
-            font-size: 0.9rem; /* Increased */
-            text-transform: uppercase;
-            color: var(--text-secondary);
-            border-bottom: 1px solid #e5e7eb;
-        }
-        td {
-            padding: 14px; /* Increased padding */
-            font-size: 1rem; /* Increased */
-            border-bottom: 1px solid #f3f4f6;
-        }
-        tr:last-child td { border-bottom: none; }
-        
-        .badge {
-            background-color: #eef2ff;
-            color: var(--accent-color);
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 20px;
-            color: var(--text-secondary);
-            font-style: italic;
-        }
-
-        .chart-container {
-            position: relative;
-            height: 300px;
-            width: 100%;
-        }
-    </style>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Performance comercial · Bali Park</title>
+  <link rel="stylesheet" href="/assets/dashboard.css">
+  <script src="/assets/chart.umd.js" defer></script>
+  <script src="/assets/dashboard.js" defer></script>
 </head>
 <body>
-
-    <div class="dashboard-container">
-        <header>
-            <h1>Dashboard de Performance</h1>
-            <p class="subtitle">Vendas e Efetividade de Atendimento</p>
-            
-            <div style="margin-top: 20px; display: flex; gap: 15px; justify-content: center; align-items: center; flex-wrap: wrap;">
-                <div style="display: flex; gap: 8px; align-items: center;">
-                    <label for="dataInicial" style="font-size: 0.9rem; color: var(--text-secondary);">Data Inicial:</label>
-                    <input type="date" id="dataInicial" value="<%= dataInicial %>" 
-                           style="padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem;">
-                </div>
-                <div style="display: flex; gap: 8px; align-items: center;">
-                    <label for="dataFinal" style="font-size: 0.9rem; color: var(--text-secondary);">Data Final:</label>
-                    <input type="date" id="dataFinal" value="<%= dataFinal %>" 
-                           style="padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem;">
-                </div>
-                <button onclick="aplicarFiltro()" 
-                        style="padding: 8px 20px; background-color: var(--accent-color); color: white; border: none; border-radius: 6px; font-size: 0.9rem; cursor: pointer; font-weight: 500;">
-                    Aplicar Filtro
-                </button>
-                <button onclick="limparFiltro()" 
-                        style="padding: 8px 20px; background-color: #6b7280; color: white; border: none; border-radius: 6px; font-size: 0.9rem; cursor: pointer; font-weight: 500;">
-                    Mês Atual
-                </button>
-            </div>
-        </header>
-
-        <!-- Top Row Cards -->
-        <div class="kpi-grid">
-            <div class="card">
-                <div class="kpi-title">Faturamento Total</div>
-                <div class="kpi-value highlight"><%= kpi.faturamento %></div>
-            </div>
-            <div class="card">
-                <div class="kpi-title">Vendas Totais</div>
-                <div class="kpi-value"><%= kpi.vendas %></div>
-            </div>
-            <div class="card">
-                <div class="kpi-title">Ticket Médio</div>
-                <div class="kpi-value"><%= kpi.ticket %></div>
-            </div>
-            <div class="card">
-                <div class="kpi-title">Conv. de Resposta</div>
-                <div class="kpi-value green"><%= kpi.taxaResposta %></div>
-                <div style="font-size: 0.8rem; color: #999; margin-top:5px;">
-                    <%= kpi.atendimentoResp %> resp. / <%= kpi.atendimentoTotal %> envios
-                </div>
-            </div>
-        </div>
-
-        <!-- Bottom Row Cards -->
-        <div class="kpi-grid">
-            <div class="card">
-                <div class="kpi-title">Leads Central Vendas</div>
-                <div class="kpi-value"><%= kpi.leadsCentralVendas %></div>
-            </div>
-            <div class="card">
-                <div class="kpi-title">Leads Remarketing</div>
-                <div class="kpi-value"><%= kpi.leadsRemarketing %></div>
-            </div>
-            <div class="card">
-                <div class="kpi-title">Conv. Geral (Vendas/Total)</div>
-                <div class="kpi-value highlight"><%= kpi.convGeral %></div>
-            </div>
-            <div class="card">
-                <div class="kpi-title">Conv. Real (Vendas/Resp)</div>
-                <div class="kpi-value green"><%= kpi.convReal %></div>
-            </div>
-        </div>
-
-        <div class="main-grid">
-            <div class="card">
-                <div class="section-title">Evolução de Faturamento</div>
-                <div class="chart-container">
-                    <canvas id="revenueChart"></canvas>
-                </div>
-            </div>
-
-            <div class="card" style="overflow-x: auto;">
-                <div class="section-title">Performance Mensal</div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Mês</th>
-                            <th>Qtd</th>
-                            <th>Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <%- tables.mensal %>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="section-title">
-                Últimas 10 Vendas
-                <span style="font-size:0.8rem; color:var(--text-secondary); font-weight:400;">Ordenado por data de compra</span>
-            </div>
-            <table style="width: 100%;">
-                <thead>
-                    <tr>
-                        <th style="width: 30%">Data</th>
-                        <th style="width: 40%">Voucher / ID</th>
-                        <th style="width: 30%">Valor</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <%- tables.ultimas %>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <script>
-        // Configuração do Gráfico usando Chart.js
-        const ctx = document.getElementById('revenueChart').getContext('2d');
-        
-        // Dados injetados pelo EJS
-        const labels = <%- charts.labels %>;
-        const usersData = <%- charts.users %>;
-        const activeUsersData = <%- charts.activeUsers %>;
-        const salesData = <%- charts.sales %>;
-        const revenueData = <%- charts.revenue %>;
-
-        // Calcular máximos separados para cada eixo
-        const maxUsers = Math.max(...usersData, ...activeUsersData);
-        const maxSales = Math.max(...salesData);
-        const yUsersMax = Math.max(10, Math.ceil(maxUsers * 1.1));
-        const ySalesMax = Math.max(6, Math.ceil(maxSales * 1.5));
-
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [
-                    {
-                        type: 'bar',
-                        label: 'Vendas',
-                        data: salesData,
-                        backgroundColor: 'rgba(79, 70, 229, 0.8)',
-                        borderColor: '#4f46e5',
-                        borderWidth: 1,
-                        borderRadius: 4,
-                        yAxisID: 'ySales',
-                        order: 2
-                    },
-                    {
-                        type: 'line',
-                        label: 'Atendimentos Totais',
-                        data: usersData,
-                        borderColor: '#6b7280',
-                        backgroundColor: 'rgba(107, 114, 128, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.3,
-                        pointRadius: 3,
-                        yAxisID: 'yUsers',
-                        order: 1
-                    },
-                    {
-                        type: 'line',
-                        label: 'Que Interagiram',
-                        data: activeUsersData,
-                        borderColor: '#f59e0b',
-                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                        borderWidth: 2,
-                        tension: 0.3,
-                        pointRadius: 3,
-                        yAxisID: 'yUsers',
-                        order: 1
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: {
-                    mode: 'index',
-                    intersect: false,
-                },
-                plugins: {
-                    legend: { position: 'top' },
-                    tooltip: {
-                        callbacks: {
-                            afterBody: function(context) {
-                                const index = context[0].dataIndex;
-                                const totalUsers = usersData[index];
-                                const sales = salesData[index];
-                                const revenue = revenueData[index];
-                                
-                                const valorFormatado = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(revenue);
-                                let result = '\nValor: ' + valorFormatado;
-                                
-                                if (totalUsers > 0) {
-                                    const conversionRate = ((sales / totalUsers) * 100).toFixed(2);
-                                    result += '\nTaxa de Conversão: ' + conversionRate + '%';
-                                } else {
-                                    result += '\nTaxa de Conversão: 0.00%';
-                                }
-                                
-                                return result;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    yUsers: {
-                        type: 'linear',
-                        display: true,
-                        position: 'left',
-                        beginAtZero: true,
-                        max: yUsersMax,
-                        grid: { borderDash: [5, 5], color: '#f3f4f6' },
-                        title: { display: true, text: 'Atendimentos', color: '#6b7280' },
-                        ticks: { color: '#6b7280' }
-                    },
-                    ySales: {
-                        type: 'linear',
-                        display: true,
-                        position: 'right',
-                        beginAtZero: true,
-                        max: ySalesMax,
-                        grid: { display: false },
-                        title: { display: true, text: 'Vendas', color: '#4f46e5' },
-                        ticks: { 
-                            color: '#4f46e5',
-                            stepSize: 1
-                        }
-                    },
-                    x: {
-                        grid: { display: false }
-                    }
-                }
-            }
-        });
-
-        // Funções de filtro de data
-        function aplicarFiltro() {
-            const dataInicial = document.getElementById('dataInicial').value;
-            const dataFinal = document.getElementById('dataFinal').value;
-            
-            if (!dataInicial || !dataFinal) {
-                alert('Por favor, selecione ambas as datas');
-                return;
-            }
-            
-            if (dataInicial > dataFinal) {
-                alert('A data inicial não pode ser maior que a data final');
-                return;
-            }
-            
-            window.location.href = `/?dataInicial=${dataInicial}&dataFinal=${dataFinal}`;
-        }
-
-        function limparFiltro() {
-            window.location.href = '/';
-        }
-    </script>
+  <%- include('partials/icons') %>
+  <a class="skip-link" href="#conteudo">Ir para o conteúdo</a>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="Bali Park, início">
+      <span class="brand-mark"><img src="/assets/bali-park-logo.webp" alt="" width="46" height="46"></span>
+      <span><strong>BALI PARK</strong><small>BABI · AGENTE AI DE VENDAS</small></span>
+    </a>
+    <div class="topbar-right"><a class="powered-by" href="https://vartana.ia.br" target="_blank" rel="noopener noreferrer" aria-label="Visitar o site da Vartana"><img src="/assets/vartana-logo.svg" alt="Vartana" width="38" height="38"><small>Tecnologia <strong>Vartana</strong></small></a><form action="/logout" method="post"><button class="button button-ghost" type="submit"><svg><use href="#logout"/></svg><span>Sair</span></button></form></div>
+  </header>
+  <main id="conteudo" class="dashboard">
+    <form action="/" method="get" class="filter-bar">
+      <div class="filter-title"><span class="icon-box"><svg><use href="#calendar"/></svg></span><div><strong>Período de análise</strong><small>Veja o desempenho da Babi por data</small></div></div>
+      <div class="filter-fields">
+        <label>De<input type="date" name="dataInicial" value="<%= dataInicial %>" required></label>
+        <span class="date-arrow" aria-hidden="true">→</span>
+        <label>Até<input type="date" name="dataFinal" value="<%= dataFinal %>" required></label>
+        <button class="button button-primary" type="submit"><svg><use href="#filter"/></svg>Aplicar</button>
+        <a class="button button-soft" href="/">Mês atual</a>
+      </div>
+    </form>
+    <div class="section-label"><h2>Impacto comercial no período</h2><span>Resultados acompanhados pela Babi</span></div>
+    <section class="kpi-grid" aria-label="Indicadores comerciais">
+      <article class="metric metric-featured"><div class="metric-top"><span>Faturamento total</span><span class="metric-icon"><svg><use href="#wallet"/></svg></span></div><div class="metric-value"><%= kpi.faturamento %></div><div class="metric-foot"><span class="tiny-dot"></span> Receita acompanhada pela Babi</div></article>
+      <article class="metric"><div class="metric-top"><span>Vendas realizadas</span><span class="metric-icon blue"><svg><use href="#ticket"/></svg></span></div><div class="metric-value"><%= number(kpi.vendas) %></div><div class="metric-foot">Conversas que avançaram para resultados</div></article>
+      <article class="metric"><div class="metric-top"><span>Ticket médio</span><span class="metric-icon mint"><svg><use href="#wallet"/></svg></span></div><div class="metric-value"><%= kpi.ticket %></div><div class="metric-foot">Valor médio dos resultados gerados</div></article>
+      <article class="metric"><div class="metric-top"><span>Taxa de resposta</span><span class="metric-icon amber"><svg><use href="#chat"/></svg></span></div><div class="metric-value"><%= kpi.taxaResposta %></div><div class="metric-foot"><strong><%= number(kpi.atendimentoResp) %></strong> respostas · <%= number(kpi.atendimentoTotal) %> atendimentos</div></article>
+    </section>
+    <section class="secondary-grid" aria-label="Leads e conversões">
+      <article class="mini-metric"><span class="mini-icon"><svg><use href="#users"/></svg></span><div><span>Leads central de vendas</span><strong><%= number(kpi.leadsCentralVendas) %></strong></div></article>
+      <article class="mini-metric"><span class="mini-icon"><svg><use href="#return"/></svg></span><div><span>Leads remarketing</span><strong><%= number(kpi.leadsRemarketing) %></strong></div></article>
+      <article class="mini-metric"><span class="mini-icon"><svg><use href="#trend"/></svg></span><div><span>Conversão geral</span><strong><%= kpi.convGeral %></strong><small>Vendas / atendimentos</small></div></article>
+      <article class="mini-metric"><span class="mini-icon"><svg><use href="#target"/></svg></span><div><span>Conversão real</span><strong><%= kpi.convReal %></strong><small>Vendas / respostas</small></div></article>
+    </section>
+    <section class="performance-grid" aria-label="Vendas e histórico mensal">
+      <article class="panel activity-panel"><div class="panel-heading"><div><h2>Vendas e atendimento</h2><p id="activity-chart-description">Como as conversas da Babi avançam até a venda</p></div><div class="chart-toggle" role="group" aria-label="Visualização do gráfico"><button class="active" type="button" data-chart-view="daily" aria-pressed="true">Vendas por dia</button><button type="button" data-chart-view="hourly" aria-pressed="false">Vendas por horário</button></div></div><div class="chart-wrap"><canvas id="activityChart" role="img" aria-label="Gráfico de vendas e atendimentos por dia"></canvas></div></article>
+      <article class="panel monthly-panel"><div class="panel-heading"><div><h2>Performance mensal</h2><p>Histórico geral de vendas</p></div><svg class="subtle-icon"><use href="#calendar"/></svg></div><div class="table-scroll"><table><thead><tr><th>Mês</th><th>Vendas</th><th class="align-right">Faturamento</th></tr></thead><tbody><% tables.mensal.forEach(row => { %><tr><td class="strong"><%= row.mes %></td><td><span class="count-badge"><%= number(row.qtd) %></span></td><td class="align-right strong"><%= money(row.total) %></td></tr><% }) %><% if (!tables.mensal.length) { %><tr><td colspan="3" class="empty-state">Ainda não há vendas para exibir.</td></tr><% } %></tbody></table></div></article>
+    </section>
+    <section class="latest-sales" aria-label="Últimas vendas">
+      <article class="panel sales-panel"><div class="panel-heading"><div><h2>Últimas vendas</h2><p>As 10 vendas mais recentes · histórico geral</p></div><span class="badge">Pagamentos aprovados</span></div><div class="table-scroll"><table><thead><tr><th>Voucher</th><th>Data e hora</th><th>Status</th><th class="align-right">Valor</th></tr></thead><tbody><% tables.ultimas.forEach(row => { %><tr><td><span class="voucher"><svg><use href="#ticket"/></svg><%= row.voucher_code || '—' %></span><small class="row-id">#<%= row.id %></small></td><td><span><%= row.data_compra %></span><small class="row-time"><%= row.hora_compra %></small></td><td><span class="paid-badge"><span></span>Aprovado</span></td><td class="align-right strong"><%= money(row.valor_total) %></td></tr><% }) %><% if (!tables.ultimas.length) { %><tr><td colspan="4" class="empty-state">As próximas vendas aparecerão aqui.</td></tr><% } %></tbody></table></div></article>
+    </section>
+    <footer class="footer"><span><strong>CRIATIVA AI</strong> · Inteligência que transforma conversas em resultados.</span><span>Babi para Bali Park · Valores em reais · Horário de Brasília</span></footer>
+  </main>
+  <script id="chart-data" type="application/json"><%- chartJson %></script>
 </body>
 </html>
